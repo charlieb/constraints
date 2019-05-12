@@ -55,12 +55,13 @@
 (defn fix-dist 
   "Return updated c1 such that the distance to center of c2 is fixed"
   ([c1 c2] (fix-dist c1 c2 1.0))
-  ([c1 c2 fac]
+  ([c1 c2 fac] fix-dist c1 c2 fac (+ (:r c1) (:r c2)))
+  ([c1 c2 fac dst])
    (assoc c1
           :c (set-dist (:c c1) (:c c2)
-                       (+ (:r c1) (:r c2)) ; desired-dist
+                       dst ; desired-dist
                        (constantly true)
-                       1.0))))
+                       fac)))
 
 (defn keep-within [c1 c2] "Return updated c1 such that it stays within c2"
   (assoc c1
