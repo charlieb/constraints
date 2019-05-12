@@ -42,19 +42,26 @@
   (let [id (+ 1 (max (map :id cs)))]
     (conj (assoc c :id id) cs)))
 
-(defn exclude [c1 c2] "Return c1 updated such that the overlap with c2 is halved"
-  (assoc c1
-         :c (set-dist (:c c1) (:c c2)
-                      (+ (:r c1) (:r c2)) ; desired-dist
-                      <
-                      0.5)))
+(defn exclude
+  "Return c1 updated such that the overlap with c2 eliminted"
+  ([c1 c2] (exclude c1 c2 1.0))
+  ([c1 c2 fac]
+   (assoc c1
+          :c (set-dist (:c c1) (:c c2)
+                       (+ (:r c1) (:r c2)) ; desired-dist
+                       <
+                       fac))))
 
-(defn fix-dist [c1 c2] "Return updated c1 such that the distance to center of c2 is fixed"
-  (assoc c1
-         :c (set-dist (:c c1) (:c c2)
-                      (+ (:r c1) (:r c2)) ; desired-dist
-                      (constantly true)
-                      1.0)))
+(defn fix-dist 
+  "Return updated c1 such that the distance to center of c2 is fixed"
+  ([c1 c2] (fix-dist c1 c2 1.0))
+  ([c1 c2 fac]
+   (assoc c1
+          :c (set-dist (:c c1) (:c c2)
+                       (+ (:r c1) (:r c2)) ; desired-dist
+                       (constantly true)
+                       1.0))))
+
 (defn keep-within [c1 c2] "Return updated c1 such that it stays within c2"
   (assoc c1
          :c (set-dist (:c c1) (:c c2)
