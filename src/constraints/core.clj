@@ -1,19 +1,11 @@
 (ns constraints.core)
 
-(defprotocol V2
-  (add [this p])
-  (sub [this p])
-  (mul [this m])
-  (div [this d])
-  (mag [this])
-  (norm [this])
-  )
-
-(defprotocol Constraints
-  (dist< [this p distance] [this p distance correction-factor]) ;"Ensure distance is less than the value specified"
-  (dist> [this p distance] [this p distance correction-factor]) ;"Ensure distance is greater than the value specified"
-  (dist= [this p distance] [this p distance correction-factor]) ;"Ensure distance is less than the value specified"
-  )
+(defn add [p1 p2] {:x (+ (.x p1) (.x p2)) :y (+ (.y p1) (.y p2))})
+(defn sub [p1 p2] {:x. (- (.x p1) (.x p2)) :y (- (.y p1) (.y p2))})
+(defn mul [p1 m] {:x. (* (.x p1) m) :y (* (.y p1) m)})
+(defn div [p1 d] {:x. (/ (.x p1) d) :y (/ (.y p1) d)})
+(defn mag [p] (Math/sqrt (+ (* (.x p) (.x p)) (* (.y p) (.y p)))))
+(defn norm [p] (div p (mag p)))
 
 (defn- set-dist [p1 p2 d condition correction-factor]
   (let [delta (sub p2 p1)
@@ -24,33 +16,26 @@
                    correction-factor))
       p1)))
 
-(deftype Point [x y] 
-  V2
-  (add [p1 p2] (Point. (+ (.x p1) (.x p2)) 
-                       (+ (.y p1) (.y p2))))
-  (sub [p1 p2] (Point. (- (.x p1) (.x p2)) 
-                       (- (.y p1) (.y p2))))
-  
-  (mul [p1 m] (Point. (* (.x p1) m) 
-                      (* (.y p1) m)))
-  (div [p1 d] (Point. (/ (.x p1) d) 
-                      (/ (.y p1) d)))
+(defn dist<
+  ([p1 p2 dst] (dist< p1 p2 dst 1.0))
+  ([p1 p2 dst factor] (set-dist p1 p2 dst > factor)))
 
-  (mag [p] (Math/sqrt (+ (* (.x p) (.x p))
-                         (* (.y p) (.y p)))))
+(defn dist> 
+  ([p1 p2 dst] (dist> p1 p2 dst 1.0))
+  ([p1 p2 dst factor] (set-dist p1 p2 dst < factor)))
 
-  (norm [p] (div p (mag p)))
+(defn dist= 
+  ([p1 p2 dst] (dist< p1 p2 dst 1.0))
+  ([p1 p2 dst factor] (set-dist p1 p2 dst (constantly true) factor)))
 
-  Constraints
-  (dist< [p1 p2 dst] (dist< p1 p2 dst 1.0))
-  (dist< [p1 p2 dst factor] (set-dist p1 p2 dst > factor))
-
-  (dist> [p1 p2 dst] (dist> p1 p2 dst 1.0))
-  (dist> [p1 p2 dst factor] (set-dist p1 p2 dst < factor))
-
-  (dist=[p1 p2 dst] (dist< p1 p2 dst 1.0))
-  (dist= [p1 p2 dst factor] (set-dist p1 p2 dst (constantly true) factor)))
-
+(defn step
+  "Step the verlet simulation for this point"
+  [p]
+  {:pos 
+   (-> (:pos p)
+       (mul 2.)
+       (sub (:prev-pos p)))
+   :prev-pos (:pos p)})
 
 
 (defn foo
